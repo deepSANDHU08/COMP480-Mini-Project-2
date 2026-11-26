@@ -35,10 +35,18 @@ genre_related(A, B) :- genre_parent(A, B).
 genre_related(A, B) :- genre_parent(B, A).
 genre_path(From, To, Path) :- genre_path_(From, To, [From], Reverse), reverse(Reverse, Path).
 genre_path_(To, To, Seen, Seen).
-genre_path_(From, To, Seen, Path) :- genre_related(From, Next), \+ member_of(Next, Seen), genre_path_(Next, To, [Next|Seen], Path).
+genre_path_(From, To, Seen, Path) :-
+    genre_related(From, Next),
+    \+ member_of(Next, Seen),
+    genre_path_(Next, To, [Next|Seen], Path).
 
 % Recommend available books in a genre the member has previously borrowed.
-recommend_book(Member, Id) :- loan(Member, Borrowed), book(Borrowed, _, _, Genre, _), available(Id), book(Id, _, _, Genre, _), Id \= Borrowed.
+recommend_book(Member, Id) :-
+    loan(Member, Borrowed),
+    book(Borrowed, _, _, Genre, _),
+    available(Id),
+    book(Id, _, _, Genre, _),
+    Id \= Borrowed.
 recommended_titles(Member, Titles) :- findall(Title, (recommend_book(Member, Id), book(Id, Title, _, _, _)), Raw), remove_duplicates(Raw, Titles).
 
 % Allocate three distinct available books, one to each reader, with genre preferences.

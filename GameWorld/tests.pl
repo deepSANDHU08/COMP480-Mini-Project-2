@@ -12,6 +12,7 @@ test(inventory, [nondet]) :- has_item(player1, sword).
 test(missing_item, [fail]) :- has_item(player2, sword).
 test(completable_quest, [nondet]) :- can_complete_quest(player1, retrieve_amulet).
 test(quest_dependency, [fail]) :- can_complete_quest(player2, explore_dungeon).
+test(all_quest_dependencies_required, [fail]) :- dependencies_met(player2, retrieve_amulet).
 test(available_quest, [nondet]) :- available_quest(player1, retrieve_amulet).
 test(item_puzzle, [nondet]) :- item_assignment(sword, amulet, map).
 test(path_successor_steps) :- path_steps([village,forest,castle,dungeon], s(s(s(0)))).

@@ -22,20 +22,37 @@ quest_requirement(slay_dragon, sword).
 quest_requirement(retrieve_amulet, key).
 quest_requirement(explore_dungeon, torch).
 quest_dependency(retrieve_amulet, find_key).
+quest_dependency(retrieve_amulet, slay_dragon).
 quest_dependency(explore_dungeon, retrieve_amulet).
 completed(player1, find_key). completed(player1, slay_dragon).
+completed(player2, find_key).
 
 can_reach(From, To) :- can_reach_(From, To, [From]).
 can_reach_(To, To, _).
-can_reach_(From, To, Seen) :- connected(From, Next), \+ member_of(Next, Seen), can_reach_(Next, To, [Next|Seen]).
+can_reach_(From, To, Seen) :-
+    connected(From, Next),
+    \+ member_of(Next, Seen),
+    can_reach_(Next, To, [Next|Seen]).
 path(From, To, Path) :- path_(From, To, [From], Reverse), reverse(Reverse, Path).
 path_(To, To, Seen, Seen).
-path_(From, To, Seen, Path) :- connected(From, Next), \+ member_of(Next, Seen), path_(Next, To, [Next|Seen], Path).
+path_(From, To, Seen, Path) :-
+    connected(From, Next),
+    \+ member_of(Next, Seen),
+    path_(Next, To, [Next|Seen], Path).
 
-% Dependencies are recursively checked before a quest can be completed.
-dependencies_met(_, Quest) :- \+ quest_dependency(Quest, _).
-dependencies_met(Player, Quest) :- quest_dependency(Quest, Parent), completed(Player, Parent), dependencies_met(Player, Parent).
-can_complete_quest(Player, Quest) :- quest(Quest), quest_requirement(Quest, Item), has_item(Player, Item), dependencies_met(Player, Quest).
+% Every direct dependency (and its own dependencies) must be complete.
+% The Seen list also makes a mistaken circular dependency fail instead of looping.
+dependencies_met(Player, Quest) :- dependencies_met_(Player, Quest, []).
+dependencies_met_(Player, Quest, Seen) :-
+    \+ member_of(Quest, Seen),
+    forall(quest_dependency(Quest, Parent),
+           (completed(Player, Parent),
+            dependencies_met_(Player, Parent, [Quest|Seen]))).
+can_complete_quest(Player, Quest) :-
+    quest(Quest),
+    quest_requirement(Quest, Item),
+    has_item(Player, Item),
+    dependencies_met(Player, Quest).
 available_quest(Player, Quest) :- can_complete_quest(Player, Quest), \+ completed(Player, Quest).
 
 % A backtracking item puzzle: each hero receives a distinct required item.

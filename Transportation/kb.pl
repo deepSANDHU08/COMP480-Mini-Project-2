@@ -32,7 +32,10 @@ route_(From, To, Visited, Path) :-
 
 all_routes(From, To, Routes) :- findall(Path, route(From, To, Path), Raw), remove_duplicates(Raw, Routes).
 route_distance([_], 0).
-route_distance([A,B|Tail], Total) :- distance(A, B, D), route_distance([B|Tail], Rest), Total is D + Rest.
+route_distance([A,B|Tail], Total) :-
+    distance(A, B, D),
+    route_distance([B|Tail], Rest),
+    Total is D + Rest.
 shortest_route(From, To, Path, Distance) :-
     setof(D-P, R^(route(From, To, R), route_distance(R, D), P = R), [Distance-Path|_]).
 reachable_cities(From, Cities) :- findall(C, (city(C), C \= From, reachable(From, C)), Raw), remove_duplicates(Raw, Cities).
